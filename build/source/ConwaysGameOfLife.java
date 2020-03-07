@@ -1,8 +1,24 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class ConwaysGameOfLife extends PApplet {
+
 final int STARTER_LIFES = 80000;
 final int INITIAL_DIV_FACTOR = 2;
 
 
-float ZOOM_SCALE = 1.0;
+float ZOOM_SCALE = 1.0f;
 int X_OFFSET = 0;
 int Y_OFFSET = 0;
 
@@ -20,7 +36,7 @@ int[] initSeedX;
 int[] initSeedY;
 int GSIZEX;
 int GSIZEY;
-void setGrid(){
+public void setGrid(){
   changeQueue = new ArrayList<Node>();
 
   GSIZEX = width/INITIAL_DIV_FACTOR;
@@ -67,7 +83,7 @@ void setGrid(){
 
 }
 
-void resetNextGrid(){
+public void resetNextGrid(){
 
   for(int i = 0 ; i < GSIZEX;i++){
    for(int j = 0 ; j < GSIZEY; j++){
@@ -86,7 +102,7 @@ void resetNextGrid(){
   */
 }
 
-void handleGrid(){
+public void handleGrid(){
 
   stroke(colorBool(true));
   scale(ZOOM_SCALE);
@@ -102,14 +118,14 @@ void handleGrid(){
 
 
 
-void setup(){
+public void setup(){
 
-  fullScreen();
+  
   setGrid();
 
 }
 
-void mousePressed(){
+public void mousePressed(){
   int x = (int)((mouseX)/ZOOM_SCALE)-X_OFFSET;
   int y = (int)((mouseY)/ZOOM_SCALE)-Y_OFFSET;
   GRID[x][y].val=true;
@@ -119,13 +135,13 @@ void mousePressed(){
   }
 
 }
-void keyPressed(){
+public void keyPressed(){
 
   if(key==UP){
-    ZOOM_SCALE = constrain(ZOOM_SCALE+1, .5, 10);
+    ZOOM_SCALE = constrain(ZOOM_SCALE+1, .5f, 10);
   }
   else if (key == DOWN){
-    ZOOM_SCALE = constrain(ZOOM_SCALE-1, .5, 10);
+    ZOOM_SCALE = constrain(ZOOM_SCALE-1, .5f, 10);
   }
 
 
@@ -145,16 +161,16 @@ void keyPressed(){
 
 }
 
-void mouseWheel(MouseEvent event) {
+public void mouseWheel(MouseEvent event) {
   float e = event.getCount();
   if(e>0){
-    ZOOM_SCALE = constrain(ZOOM_SCALE+1, .5, 10);
+    ZOOM_SCALE = constrain(ZOOM_SCALE+1, .5f, 10);
   }else{
-    ZOOM_SCALE = constrain(ZOOM_SCALE-1, .5, 10);
+    ZOOM_SCALE = constrain(ZOOM_SCALE-1, .5f, 10);
   }
 }
 
-void draw(){
+public void draw(){
   background(180);
 
   handleGrid();
@@ -162,4 +178,87 @@ void draw(){
   fill(255,0,255);
   text(frameRate, 50,50);
 
+}
+public int colorBool(boolean a){
+  
+  if(a)return color(0,0,200);
+  return color(0);
+}
+
+class Node{
+  boolean val = false;
+  int x;
+  int y;
+  boolean valid = true;
+  
+  Node(int ix, int iy){
+    x=ix;
+    y=iy;
+  }
+  
+  Node(){
+  
+    valid=false;
+    
+  }
+  
+  
+  public void d(){
+    if(!val||!valid)return;
+    
+    point(x,y);
+    
+  }
+  public int getLiveNeighbors(){
+    int c = 0;
+    if(GRID[x-1][y].val)c++;
+    if(GRID[x][y-1].val)c++;
+    if(GRID[x+1][y].val)c++;
+    if(GRID[x][y+1].val)c++;
+    if(GRID[x+1][y+1].val)c++;
+    if(GRID[x-1][y-1].val)c++;
+    if(GRID[x+1][y-1].val)c++;
+    if(GRID[x-1][y+1].val)c++;
+    return c;
+  }
+  
+  public void setNextVal(boolean v){
+  
+    next_grid[x][y].val = v;
+    
+  }
+
+  public void tick(){
+    if(!valid)return;
+    int actN = getLiveNeighbors();
+    if(val){
+      if(actN < 2||actN>3){
+        setNextVal(false);
+        changeQueue.add(this);
+      }else{
+        setNextVal(true);
+        
+      }
+    }else{
+      if(actN==3){
+        setNextVal(true);
+        changeQueue.add(this);
+      }else{
+        setNextVal(false);
+      }
+    }
+    
+  }
+  
+  
+}
+  public void settings() {  fullScreen(); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "ConwaysGameOfLife" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
 }
